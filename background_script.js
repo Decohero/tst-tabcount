@@ -13,6 +13,8 @@ async function registerToTST() {
             listeningTypes: [
                 'sidebar-show',
                 'tabs-rendered',
+                'tree-attached',
+                'tree-detached',
                 'wait-for-shutdown',
             ],
             allowBulkMessaging: true,
@@ -58,10 +60,8 @@ async function waitForTSTShutdown() {
         throw error;
     }
 }
-waitForTSTShutdown().then(uninitFeaturesForTST);
 
 function onMessageExternal(message, sender) {
-    console.log("inMessageExternal");
     if (sender.id == TST_ID) {
         if (message && message.messages) {
             for (const oneMessage of message.messages) {
@@ -96,8 +96,6 @@ async function refreshTabNumbers() {
         type:   'get-light-tree',
         tabs:   '*',
     });
-    console.log('In refreshTabNumbers()');
-    console.log(tabs);
     for (const [index, tab] of tabs.entries()) {
         insertContents(tab.id, index + 1);
     }
@@ -109,6 +107,14 @@ browser.runtime.onMessageExternal.addListener(async (message, sender) => {
         case TST_ID:
             switch (message.type) {
                 case 'ready':
+                    refreshTabNumbers();
+                    break;
+
+                case 'tree-attached':
+                    refreshTabNumbers();
+                    break;
+
+                case 'tree-detached':
                     refreshTabNumbers();
                     break;
 
@@ -128,3 +134,6 @@ browser.runtime.onMessageExternal.addListener(async (message, sender) => {
             break;
     }
 });
+
+waitForTSTShutdown().then(uninitFeaturesForTST);
+
